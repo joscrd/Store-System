@@ -3,7 +3,7 @@ import Card from 'react-bootstrap/Card';
 function CardStore({ title }) {
   return (
     <>
-      <Card bg="dark" text="white" border="primary" style={{ width: '18rem' }}>
+      <Card bg="dark" text="white" border="secondary" style={{ width: '18rem' }}>
         <Card.Header>Header</Card.Header>
         <Card.Body>
           <Card.Title>{title}</Card.Title>
