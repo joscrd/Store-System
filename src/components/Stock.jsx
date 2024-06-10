@@ -1,11 +1,30 @@
+import React, { useState, useEffect } from "react";
 import CardStore from "./CardStore";
 import { Container, Row, Col, Button, Modal, Form } from "react-bootstrap";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 function Stock() {
     const [showModalCreate, setShowModalCreate] = useState(false);
+    const [items, setItems] = useState([]);
     const { register, handleSubmit, reset, formState: { errors } } = useForm();
+
+    useEffect(() => {
+        fetchItems();
+    }, []);
+
+    const fetchItems = async () => {
+        const getItemsUrl = 'http://localhost:8082/api/store/getItems';
+
+        try {
+            const response = await fetch(getItemsUrl);
+            const data = await response.json();
+
+            setItems(data);
+            console.log(data);
+        } catch (error) {
+            console.error('Error fetching items:', error);
+        }
+    }
 
     const handleCreate = () => {
         setShowModalCreate(true);
@@ -31,9 +50,9 @@ function Stock() {
 
             <Container className="d-flex justify-content-center">
                 <Row xs={1} md={2} className="g-4 justify-content-center">
-                    {Array.from({ length: 8 }).map((_, idx) => (
+                    {items.map((item, idx) => (
                         <Col key={idx} className="d-flex justify-content-center">
-                            <CardStore title={`item ${idx + 1}`} />
+                            <CardStore title={item.name} description={item.description} /> {/* Ajusta esto según los datos de tu item */}
                         </Col>
                     ))}
                 </Row>
