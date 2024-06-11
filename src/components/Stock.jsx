@@ -4,9 +4,10 @@ import { Container, Row, Col, Button, Modal, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 
 function Stock() {
-    const [showModalCreate, setShowModalCreate] = useState(false);
+    const [showModalCreate, setShowModalCreate] = useState(false); 
+    const [row, setRow] = useState([]);
     const [items, setItems] = useState([]);
-    const { register, handleSubmit, reset, formState: { errors } } = useForm();
+    const { register, handleSubmit, reset, formState: { errors }, clearErrors } = useForm();
 
     useEffect(() => {
         fetchItems();
@@ -20,13 +21,42 @@ function Stock() {
             const data = await response.json();
 
             setItems(data);
-            console.log(data);
         } catch (error) {
             console.error('Error fetching items:', error);
         }
     }
 
+    const saveItem = async (item) => {
+        const saveItemUrl = 'http://localhost:8082/api/store/saveItem';
+    
+        try {
+            const response = await fetch(saveItemUrl, {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json', 
+                },
+                body: JSON.stringify(item), 
+            });
+    
+            if (!response.ok) {
+                throw new Error(`Error en la solicitud: ${response.statusText}`);
+            }
+    
+            const data = await response.json();
+            console.log(data);
+        } catch (error) {
+            console.error('Error al guardar el ítem:', error);
+        }
+    };
+
+    const cleanModal = () => {
+        reset();
+        clearErrors();
+    }
+
     const handleCreate = () => {
+        setRow([]);
+        cleanModal();
         setShowModalCreate(true);
     }
 
@@ -35,10 +65,28 @@ function Stock() {
         reset();
     }
 
-    const onSubmit = (data) => {
+    const onSubmit = handleSubmit( async (data) => {
+        let item = {};
+
+        if (row.id == null) {
+
+            item = {
+              "name" : data.nombre,
+              "description" : data.description,
+              "price" : data.price,
+              "stock" : data.stock
+            }
+            try{
+                await saveItem(item);
+            } catch(error){
+                console.error('Error al guardar el ítem:', error);
+            }
+            
+          } 
+
         console.log('Submitted data:', data);
         handleClose();
-    }
+    })
 
     return (
         <>
