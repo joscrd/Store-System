@@ -4,9 +4,11 @@ import { Container, Row, Col, Button, Modal, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 
 function Stock() {
-    const [showItemModal, setShowItemModal] = useState(false); 
-    const [currentItem, setCurrentItem] = useState(null);
-    const [items, setItems] = useState([]);
+    const [ showItemModal, setShowItemModal ] = useState(false); 
+    const [ showDeleteModal, setShowDeleteModal ] = useState(false); 
+    const [ currentItem, setCurrentItem ] = useState(null);
+    const [ deleteItemId, setDeleteItemId ] = useState(null);
+    const [ items, setItems ] = useState([]);
     const { register, handleSubmit, reset, setValue, formState: { errors }, clearErrors } = useForm();
 
     useEffect(() => {
@@ -89,7 +91,7 @@ function Stock() {
             }
     
             console.log('Item deleted successfully');
-            fetchItems(); // Actualiza la lista de ítems después de eliminar uno
+            fetchItems(); 
         } catch (error) {
             console.error('Error deleting item:', error);
         }
@@ -98,6 +100,24 @@ function Stock() {
     const cleanModal = () => {
         reset();
         clearErrors();
+    }
+
+    const handleDeleteClick = (item) => {
+        setDeleteItemId(item.id);
+        setShowDeleteModal(true);
+    }
+
+    const handleDeleteConfirm = async () => {
+        if (deleteItemId) {
+            await deleteItem(deleteItemId);
+            setShowDeleteModal(false);
+            setDeleteItemId(null);
+        }
+    }
+
+    const handleDeleteClose = () => {
+        setShowDeleteModal(false);
+        cleanModal();
     }
 
     const handleCreate = () => {
@@ -114,10 +134,6 @@ function Stock() {
         setShowItemModal(true);
     }
 
-   const handleDelete = async (item) => {
-        await deleteItem(item.id);
-    }
-
     const handleClose = () => {
         setShowItemModal(false);
         reset();
@@ -125,7 +141,7 @@ function Stock() {
 
     const onSubmit = handleSubmit( async (data) => {
         let item = {
-            "name" : data.nombre,
+            "name" : data.name,
             "description" : data.description,
             "price" : data.price,
             "stock" : data.stock
@@ -175,9 +191,11 @@ function Stock() {
                                 price={item.price}
                                 stock={item.stock}
                                 onEdit={() => handleEdit(item)}
+                                onDelete={() => handleDeleteClick(item)}
                             />
                         </Col>
                     ))}
+                    {items.length % 2 !== 0 && <Col className="d-flex justify-content-center" />}
                 </Row>
             </Container>
 
@@ -240,6 +258,21 @@ function Stock() {
                             </Button>
                         </div>
                     </Form>
+                </Modal.Body>
+            </Modal>
+
+            {/* DELETE MODAL */}
+            <Modal show={showDeleteModal} onHide={handleClose} contentClassName="bg-dark text-white">
+            <Modal.Header closeButton>
+                    <Modal.Title>Delete item</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div>
+                        <span>Delete item</span><br />
+
+                        <Button variant="secondary" size="sm" className="me-2" onClick={handleDeleteClose}>Close</Button>
+                        <Button variant="outline-danger" size="sm" onClick={handleDeleteConfirm}>Delete</Button>
+                    </div>
                 </Modal.Body>
             </Modal>
         </>
