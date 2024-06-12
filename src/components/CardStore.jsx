@@ -1,16 +1,19 @@
-import Card from 'react-bootstrap/Card';
+import { Card, Button }from 'react-bootstrap';
 
-function CardStore({ title }) {
+function CardStore({ index, title, description, price, stock, onEdit }) {
   return (
     <>
       <Card bg="dark" text="white" border="secondary" style={{ width: '18rem' }}>
-        <Card.Header>Header</Card.Header>
+        <Card.Header>{index}</Card.Header>
         <Card.Body>
-          <Card.Title>{title}</Card.Title>
+          <Card.Title>Item: {title}</Card.Title>
           <Card.Text>
-            Some quick example text to build on the card title and make up the
-            bulk of the card's content.
+          <div>Description: {description}</div>
+          <div>Price: {price}</div>
+          <div>Stock: {stock}</div>
           </Card.Text>
+
+          <Button variant="secondary" onClick={onEdit}>Edit</Button>
         </Card.Body>
       </Card>
       <br />

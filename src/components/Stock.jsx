@@ -4,10 +4,10 @@ import { Container, Row, Col, Button, Modal, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 
 function Stock() {
-    const [showModalCreate, setShowModalCreate] = useState(false); 
-    const [row, setRow] = useState([]);
+    const [showItemModal, setShowItemModal] = useState(false); 
+    const [currentItem, setCurrentItem] = useState(null);
     const [items, setItems] = useState([]);
-    const { register, handleSubmit, reset, formState: { errors }, clearErrors } = useForm();
+    const { register, handleSubmit, reset, setValue, formState: { errors }, clearErrors } = useForm();
 
     useEffect(() => {
         fetchItems();
@@ -19,6 +19,7 @@ function Stock() {
         try {
             const response = await fetch(getItemsUrl);
             const data = await response.json();
+            console.log(data)
 
             setItems(data);
         } catch (error) {
@@ -39,13 +40,58 @@ function Stock() {
             });
     
             if (!response.ok) {
-                throw new Error(`Error en la solicitud: ${response.statusText}`);
+                throw new Error(`Error : ${response.statusText}`);
             }
     
             const data = await response.json();
             console.log(data);
         } catch (error) {
-            console.error('Error al guardar el ítem:', error);
+            console.error('Error creating item:', error);
+        }
+    };
+
+    const updateItem = async (item) => {
+        const updateItemUrl = `http://localhost:8082/api/store/updateItem/${item.id}`;
+    
+        try {
+            const response = await fetch(updateItemUrl, {
+                method: 'PUT', 
+                headers: {
+                    'Content-Type': 'application/json', 
+                },
+                body: JSON.stringify(item), 
+            });
+    
+            if (!response.ok) {
+                throw new Error(`Error : ${response.statusText}`);
+            }
+    
+            const data = await response.json();
+            console.log(data);
+        } catch (error) {
+            console.error('Error creating item:', error);
+        }
+    };
+
+    const deleteItem = async (id) => {
+        const deleteItemUrl = `http://localhost:8082/api/store/deleteItem/${id}`;
+    
+        try {
+            const response = await fetch(deleteItemUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+    
+            if (!response.ok) {
+                throw new Error(`Error en la solicitud: ${response.statusText}`);
+            }
+    
+            console.log('Item deleted successfully');
+            fetchItems(); // Actualiza la lista de ítems después de eliminar uno
+        } catch (error) {
+            console.error('Error deleting item:', error);
         }
     };
 
@@ -55,31 +101,52 @@ function Stock() {
     }
 
     const handleCreate = () => {
-        setRow([]);
         cleanModal();
-        setShowModalCreate(true);
+        setShowItemModal(true);
+    }
+
+    const handleEdit = (item) => {
+        setCurrentItem(item);
+        setValue("name", item.name);
+        setValue("description", item.description);
+        setValue("price", item.price);
+        setValue("stock", item.stock);
+        setShowItemModal(true);
+    }
+
+   const handleDelete = async (item) => {
+        await deleteItem(item.id);
     }
 
     const handleClose = () => {
-        setShowModalCreate(false);
+        setShowItemModal(false);
         reset();
     }
 
     const onSubmit = handleSubmit( async (data) => {
-        let item = {};
+        let item = {
+            "name" : data.nombre,
+            "description" : data.description,
+            "price" : data.price,
+            "stock" : data.stock
+          }
 
-        if (row.id == null) {
+        if (currentItem) {
+            item.id = currentItem.id
 
-            item = {
-              "name" : data.nombre,
-              "description" : data.description,
-              "price" : data.price,
-              "stock" : data.stock
+            try {
+                await updateItem(item).then(() =>{ 
+                    fetchItems();
+                });
+            } catch (error) {
+                console.error('Error updating Item:', error);
             }
+        }else{
+
             try{
                 await saveItem(item);
             } catch(error){
-                console.error('Error al guardar el ítem:', error);
+                console.error('Error creating item:', error);
             }
             
           } 
@@ -96,33 +163,74 @@ function Stock() {
                 </Button>
             </div>
 
+            {/* ITEM CARD */}
             <Container className="d-flex justify-content-center">
                 <Row xs={1} md={2} className="g-4 justify-content-center">
                     {items.map((item, idx) => (
                         <Col key={idx} className="d-flex justify-content-center">
-                            <CardStore title={item.name} description={item.description} /> {/* Ajusta esto según los datos de tu item */}
+                            <CardStore 
+                                index={idx + 1}
+                                title={item.name} 
+                                description={item.description} 
+                                price={item.price}
+                                stock={item.stock}
+                                onEdit={() => handleEdit(item)}
+                            />
                         </Col>
                     ))}
                 </Row>
             </Container>
 
-            {/* CREATE ITEM MODAL */}
-            <Modal show={showModalCreate} onHide={handleClose} contentClassName="bg-dark text-white">
+            {/* ITEM MODAL */}
+            <Modal show={showItemModal} onHide={handleClose} contentClassName="bg-dark text-white">
                 <Modal.Header closeButton>
                     <Modal.Title>Add Item</Modal.Title>
                 </Modal.Header>
 
                 <Modal.Body>
                     <Form onSubmit={handleSubmit(onSubmit)}>
-                        <Form.Group controlId="itemName">
+                        <Form.Group controlId="name">
                             <Form.Label>Item Name</Form.Label>
                             <Form.Control
                                 type="text"
                                 placeholder="Enter Item Name"
-                                {...register('itemName', { required: 'Item name is required' })}
+                                {...register('name', { required: 'Item name is required' })}
                             />
-                            {errors.itemName && <p className="text-danger">{errors.itemName.message}</p>}
+                            {errors.name && <p className="text-danger">{errors.name.message}</p>}
                         </Form.Group>
+
+                        <Form.Group controlId="description">
+                            <Form.Label>Item Description</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter Item Description"
+                                {...register('description', { required: 'Item description is required' })}
+                            />
+                            {errors.description && <p className="text-danger">{errors.description.message}</p>}
+                        </Form.Group>
+
+                        <Form.Group controlId="price">
+                            <Form.Label>Item Price</Form.Label>
+                            <Form.Control
+                                type="number"
+                                step="0.01" 
+                                placeholder="Enter Item Price"
+                                {...register('price', { required: 'Item price is required', valueAsNumber: true })}
+                            />
+                            {errors.price && <p className="text-danger">{errors.price.message}</p>}
+                        </Form.Group>
+
+                        <Form.Group controlId="stock">
+                            <Form.Label>Items in Stock</Form.Label>
+                            <Form.Control
+                                type="number"
+                                placeholder="Enter Items in Stock"
+                                {...register('stock', { required: 'Items in stock is required' })}
+                            />
+                            {errors.stock && <p className="text-danger">{errors.stock.message}</p>}
+                        </Form.Group>
+
+
                         <div className="d-flex justify-content-end mt-3">
                             <Button variant="secondary" onClick={handleClose} className="me-2">
                                 Close
