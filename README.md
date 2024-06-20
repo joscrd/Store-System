@@ -1,3 +1,5 @@
+This is a Store System App designed to take inventory of selling products, product providers, and handle basic accounting. The project is still in the development stage.
+
 <<<<<<< HEAD
 # Store-System
 =======
