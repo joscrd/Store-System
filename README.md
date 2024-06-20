@@ -1,11 +1,11 @@
 <<<<<<< HEAD
 # Store-System
+
+This is a Store System App designed to take inventory of selling products, product providers, and handle basic accounting. The project is still in the development stage.
 =======
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-This is a Store System App designed to take inventory of selling products, product providers, and handle basic accounting. The project is still in the development stage.
 
 ## Available Scripts
 
